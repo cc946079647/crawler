@@ -1,18 +1,20 @@
 #基本说明
 crawler是一个使用python实现的爬虫框架，提供下载网页、解析网页内容的功能。目前处于开发阶段。
+
 #模块
 ##config.py
 配置管理模块，管理整个爬虫框架的配置信息。
 最高层的configuration为每个模块提供各自的配置信息，每个模块的配置信息也采用dict管理。
 
 ###downloader config
-####dict形式，包含下面的属性
+####下载器设置，包含下面的属性
 - agent 爬虫的agent设置，用于模仿浏览器
-- save_page 是否保存爬取的页面
+- save_page 	是否保存爬取的页面
 - save_parsed   是否保存解析得到的内容
 
 
 ###parser config
+####解析器配置，包含下面的属性
 - method:css/tag 使用哪一种方法解析html
 - method == css:配置信息是一个list，第一项是css表达式；后面的是希望提取的属性名，all表示提取整个标签。
 - example：['h3 > a',href]，提取h3标签中的a标签的href属性
@@ -30,7 +32,7 @@ crawler是一个使用python实现的爬虫框架，提供下载网页、解析�
 - 整理默认配置信息，写入文件
 - 从文件解析配置信息
 
-##ownloader.py
+##downloader.py
 下载器，目前以单线程实现。downloader从urllist获取url，下载页面，并使用parser解析页面。
 ####待完善功能
 - 多线程实现
