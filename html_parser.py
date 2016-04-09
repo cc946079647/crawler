@@ -50,7 +50,9 @@ class Parser:
             findings = soup.select(css_exp)
 
             for finding in findings:
-                print finding
+                #print finding
+                if len(finding.contents) != 1:
+                    logger.log('warn', 'finding has embedded tags!')
                 for seek in seeks:
                     if seek == 'all':
                         res[tag][seek].append(finding)
@@ -99,6 +101,8 @@ class Parser:
                 findings = soup.findAll(tag)
 
             for finding in findings:
+                if len(finding.contents) != 1:
+                    logger.log('warn', 'finding has embedded tags!')
                 for seek in seeks:
                     if seek == 'all':
                         res[tag][seek].append(finding)

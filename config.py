@@ -23,7 +23,8 @@ class Config(dict):
         a_config = parser_config['a']
         a_config.append('h3 > a')
         a_config.append('href')
-        a_config.append('text')
+        a_config.append('all')
+        #a_config.append('text')
         #IO config
         self._map_['IO'] = {}
         io_config = self._map_['IO']

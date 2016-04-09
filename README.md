@@ -3,37 +3,36 @@ crawler是一个使用python实现的爬虫框架，提供下载网页、解析�
 
 #模块
 ##config.py
-配置管理模块，管理整个爬虫框架的配置信息。
-最高层的configuration为每个模块提供各自的配置信息，每个模块的配置信息也采用dict管理。
-
-###downloader config
-####下载器设置，包含下面的属性
-- agent 爬虫的agent设置，用于模仿浏览器
-- save_page 	是否保存爬取的页面
-- save_parsed   是否保存解析得到的内容
-
-
-###parser config
-####解析器配置，包含下面的属性
-- method:css/tag 使用哪一种方法解析html
-- method == css:配置信息是一个list，第一项是css表达式；后面的是希望提取的属性名，all表示提取整个标签。
-- example：['h3 > a',href]，提取h3标签中的a标签的href属性
-- method = tag:配置信息是一个dict，对每一个标签有下面的dict进行设置：
-- attr:设置提取的标签在属性上的要求，正则表达式形式
-- text:设置提取的标签在文本上的要求，正则表达式形式
-- example:{attr:'href',text:'[0-9]+'}，提取包含href属性，且文本内容是数字的标签
-
-###IO config
-####IO操作设置，包含下面的属性
-- file_name_trans_table:由于使用url作为文件名，url中的一些字符(/、\、？、：)不能作为文件名，需要替换为其他字符。
-  是一个list，第一项是需要被替换的字符组成的字符串，第二项是被替换成的字符组成的字符串，二者一一对应。
-- example:file_name_tran_table=['/\\?:','____'],将'/\\?:'全部替换为'_'
+配置管理模块，管理整个爬虫框架的配置信息。  
+config采用分层结构管理所有的配置，每一项配置适应name索引。每一层的config按照相同的方式组织。目前的cinfig的层次为：  
+###config###
++ __downloader__
+    + __agent string__:下载器标志，用于伪装爬虫
+    + __save_page__:是否保存下载页面，默认为False
+    + __save_parsed__:是否保存解析得到的内容，默认为True
++ __parser__
+    + __method__:解析器采用的解析方法，可选css或tag。css使用css语法的选择器；tag根据tag的属性和text内容过滤。  
+    + __tag__:对每个希望得到的标签定义相应的tag，例如，希望抽取超链接中的地址，那么需要设置config[a]。config[tag]也采用key-value形式组织对这一个标签的设置。  
+        1. __method=css时__，tag对应的是一个列表，列表至少包括2项：
+            + __css expression__:string,css格式的选择器。对每一个tag只能有一个css expression。
+            + __seek__:string，希望得到的与tag相关的信息。希望获得属性时设置为属性名，希望获得文本时设置为text，希望得到整个tag时设置为all，设置项数至少为1项。
+                                注意，如果使用css expression得到的tag有内嵌的tag，那么text会包含内嵌tag的文本。  
+        2. __method=tag时__，tag对应的是一个字典，字典可以包括3项：
+            + __attr__:可选，string,希望得到的tag的属性要求，正则表达式。
+            + __text__:可选，string，希望得到的tag的文本要求，正则表达式。例如，希望得到tag的text为数字：[0-9]+。
+            + __seek__:必须，与__method=css__时的__seek__相同。列表，列表的每一项代表希望得到的属性、文本或整个tag。至少包含1项。
++ __IO__
+    + __file_name_tran_table__:列表，可选。默认使用URL保存爬取页面和解析内容，URL中的"/、\、?、："不能作为文件名，需要替换。file_name_tran_table的第一项是需要替换的字符组成的字符串，第二项是每一个被替换的字符被换为的字符组成的字符串。  
+                                   例如，将"/、\、?、："全部替换为"_"时可设置：["/\\?：","____"]。  
+                                   
 ####待完善功能
 - 整理默认配置信息，写入文件
-- 从文件解析配置信息
+- 从文件解析配置信息，不要硬编码在代码中
+
 
 ##downloader.py
 下载器，目前以单线程实现。downloader从urllist获取url，下载页面，并使用parser解析页面。
+
 ####待完善功能
 - 多线程实现
 - 完善多线程下操作：url队列为空时阻塞/定时等待；完成下载后通知url队列
@@ -41,7 +40,22 @@ crawler是一个使用python实现的爬虫框架，提供下载网页、解析�
 ##parser.py
 基于beautifulsoup的html解析模块，针对过滤条件的不同情况，提供两种过滤方式：
 #### 条件精确时：要求提供需要标签的属性值和text信息，以正则表达式方式给出。
-#### 采用css选择器，要求提供提取需要信息的css选择器，以string方式给出。
+#### 采用css选择器，要求提供提取需要信息的css选择器，以string方式给出。  
+parser的返回结果基于tag组织，使用dict将tag映射到每个tag的解析结果。每个tag的解析结果也采用dict组织。具体形式如下
+###res###
++ __tag1__
+    + __seek1__:list，每一项是一个tag中得到的seek1过滤结果。
+    + __seek2__:list，每一项是一个tag中得到的seek2过滤结果。
+    + __\.\.\.__:
++ __tag2__
+    + __seek1__:
+    + __seek2__:
+    + __seek3__:
+    + __\.\.\.__:
++ __\.\.\.__  
+###例如，希望获取页面中超链接的地址，结果组织形式如下###
++ __a__
+    + __href__:超链接组成的list
 
 ##urllist.py
 url队列模块，管理待爬取url和一下在url信息。支持多线程同时访问。
@@ -49,7 +63,8 @@ url队列模块，管理待爬取url和一下在url信息。支持多线程同�
 - 提供下载器完成url下载后的回调方法
 - 中文编码问题
 
+
 ##logger.py
 日志模块，记录信息
 ####待完善功能
-- 采用起三方日志库
+- 采用第三方日志库
